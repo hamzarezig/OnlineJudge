@@ -62,19 +62,18 @@ if [ -z "$MAX_WORKER_NUM" ]; then
     echo "Setting MAX_WORKER_NUM to $MAX_WORKER_NUM"
 fi
 
-echo "=== Debugging nginx ==="
-echo "PORT: $PORT"
+# Fix nginx configuration for Railway
+if [ ! -z "$PORT" ]; then
+    echo "Updating nginx to use PORT: $PORT"
+    # Replace the port in nginx.conf
+    sed -i "s/listen 8000 default_server;/listen $PORT default_server;/g" /app/deploy/nginx/nginx.conf
+    # Also update the upstream backend if needed
+    sed -i "s/server 127.0.0.1:8080;/server 127.0.0.1:$PORT;/g" /app/deploy/nginx/nginx.conf
+fi
+
+# Test nginx configuration
 echo "Testing nginx configuration:"
 nginx -t -c /app/deploy/nginx/nginx.conf
-echo "Nginx test result: $?"
 
-# Check if locations.conf exists
-echo "Checking nginx config files:"
-ls -la /app/deploy/nginx/
-
-# Test if nginx can start manually
-echo "Testing nginx start:"
-timeout 2s nginx -c /app/deploy/nginx/nginx.conf || echo "Nginx failed to start"
-echo "=== End Debug ==="
 
 exec supervisord -c /app/deploy/supervisord.conf
