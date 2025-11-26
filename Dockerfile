@@ -20,8 +20,8 @@ WORKDIR /app
 COPY ./deploy/requirements.txt /app/deploy/
 # psycopg2: libpg-dev
 # pillow: libjpeg-turbo-dev zlib-dev freetype-dev
-RUN --mount=type=cache,id=cache-apk-$TARGETARCH$TARGETVARIANT \
-    --mount=type=cache,id=cache-pip-$TARGETARCH$TARGETVARIANT \
+RUN --mount=type=cache,id=apk-cahce-$TARGETARCH$TARGETVARIANT \
+    --mount=type=cache,id=pip-cahce-$TARGETARCH$TARGETVARIANT \
     <<EOS
 set -ex
 apk add gcc libc-dev python3-dev libpq libpq-dev libjpeg-turbo libjpeg-turbo-dev zlib zlib-dev freetype freetype-dev supervisor openssl nginx curl unzip
