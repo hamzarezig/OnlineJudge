@@ -62,4 +62,19 @@ if [ -z "$MAX_WORKER_NUM" ]; then
     echo "Setting MAX_WORKER_NUM to $MAX_WORKER_NUM"
 fi
 
+echo "=== Debugging nginx ==="
+echo "PORT: $PORT"
+echo "Testing nginx configuration:"
+nginx -t -c /app/deploy/nginx/nginx.conf
+echo "Nginx test result: $?"
+
+# Check if locations.conf exists
+echo "Checking nginx config files:"
+ls -la /app/deploy/nginx/
+
+# Test if nginx can start manually
+echo "Testing nginx start:"
+timeout 2s nginx -c /app/deploy/nginx/nginx.conf || echo "Nginx failed to start"
+echo "=== End Debug ==="
+
 exec supervisord -c /app/deploy/supervisord.conf
