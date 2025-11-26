@@ -20,35 +20,46 @@ fi
 # Railway-specific configuration
 if [ ! -z "$PORT" ]; then
     echo "Configuring for Railway PORT: $PORT"
-    # Update configurations to use Railway's port
-    export FORCE_HTTPS=true  # Railway uses HTTPS
+    export FORCE_HTTPS=true
 fi
 
-cd $APP/deploy/nginx
-# Simplify nginx configuration for Railway
-ln -sf locations.conf https_locations.conf
-ln -sf https_redirect.conf http_locations.conf
+# Fix: Change to correct directory before running manage.py
+cd $APP
 
 # Database setup with retries
 n=0
 while [ $n -lt 5 ]
 do
+    echo "Running migrations attempt $(($n+1))..."
     python manage.py makemigrations account contest options problem submission &&
     python manage.py migrate --no-input &&
     python manage.py inituser --username=root --password=rootroot --action=create_super_admin &&
     echo "from options.options import SysOptions; SysOptions.judge_server_token='$JUDGE_SERVER_TOKEN'" | python manage.py shell &&
     echo "from conf.models import JudgeServer; JudgeServer.objects.update(task_number=0)" | python manage.py shell &&
+    echo "Migrations completed successfully!" &&
     break
     n=$(($n+1))
     echo "Failed to migrate, going to retry..."
     sleep 8
 done
 
-# Fix permissions
-addgroup -g 903 spj
-adduser -u 900 -S -G spj server
+# Fix permissions (only if users don't exist)
+if ! getent group spj > /dev/null; then
+    addgroup -g 903 spj
+fi
+
+if ! id "server" > /dev/null 2>&1; then
+    adduser -u 900 -S -G spj server
+fi
+
 chown -R server:spj $DATA $APP/dist
 find $DATA/test_case -type d -exec chmod 710 {} \;
 find $DATA/test_case -type f -exec chmod 640 {} \;
+
+# Set default MAX_WORKER_NUM if not set
+if [ -z "$MAX_WORKER_NUM" ]; then
+    export MAX_WORKER_NUM=2
+    echo "Setting MAX_WORKER_NUM to $MAX_WORKER_NUM"
+fi
 
 exec supervisord -c /app/deploy/supervisord.conf
