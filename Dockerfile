@@ -24,9 +24,9 @@ COPY ./deploy/requirements.txt /app/deploy/
 #    --mount=type=cache,id=cache:pip-cahce-$TARGETARCH$TARGETVARIANT-fin
 #    <<EOS
 
-RUN --mount=type=cache,id=s/apk-/etc/apk/cache,target=/etc/apk/cache \
-    --mount=type=cache,id=s/pip-/root/.cache/pip,target=/root/.cache/pip
-    <<EOF
+#RUN --mount=type=cache,id=s/apk-/etc/apk/cache,target=/etc/apk/cache \
+#    --mount=type=cache,id=s/pip-/root/.cache/pip,target=/root/.cache/pip
+#    <<EOF
 set -ex
 apk add gcc libc-dev python3-dev libpq libpq-dev libjpeg-turbo libjpeg-turbo-dev zlib zlib-dev freetype freetype-dev supervisor openssl nginx curl unzip
 pip install -r /app/deploy/requirements.txt
